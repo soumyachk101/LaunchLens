@@ -21,15 +21,11 @@ Are you a beginner who just got a scary wall of red text when trying to deploy y
 *(Here are some quick previews of LaunchLens in action!)*
 
 ### 1. Analyzing Logs
-<p align="center">
-  <img src="https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-analyze.gif" alt="Analyzing Logs Demo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x400.png?text=Analyzing+Logs+Demo+GIF+Coming+Soon';">
-</p>
+![Analyzing Logs Demo](https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-analyze.gif "Pasting logs into LaunchLens")
 > *Watch how LaunchLens instantly parses a Vercel build failure.*
 
 ### 2. Step-by-Step Fixes
-<p align="center">
-  <img src="https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-fixes.gif" alt="Fix Checklist Demo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x400.png?text=Interactive+Checklist+Demo+GIF+Coming+Soon';">
-</p>
+![Fix Checklist Demo](https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-fixes.gif "Interactive fix checklist")
 > *Follow the simple checklist to solve the root cause.*
 
 *(Note: If the GIFs are not loading, they will be uploaded soon!)*
@@ -159,7 +155,7 @@ First, we need to set up the database to store our rules and logs.
    ```
 2. Create a `.env` file in the `backend/` directory and configure your PostgreSQL connection URL:
    ```env
-   DATABASE_URL="******localhost:5432/deployfix?schema=public"
+   DATABASE_URL="postgresql://<USER>:<PASSWORD>@localhost:5432/deployfix?schema=public"
    PORT=5000
    ```
 3. Push the schema to your database (creates the tables):
