@@ -140,12 +140,26 @@ export default function SessionDetailPage({ params }: SessionDetailPageProps) {
           throw new Error('Using mock fallback');
         }
 
-        // Try hitting live backend
-        const analysis = await apiClient.post<AnalysisResult>(`/sessions/${id}/analyze`, {});
-        setHeadline(analysis.summary.headline);
-        setConfidence(analysis.summary.confidence);
-        setFindings(analysis.findings || []);
-        setLoading(false);
+        // 1. Fetch session from live Postgres database
+        const dbSession = await apiClient.get<any>(`/sessions/${id}`);
+
+        // 2. If already processed, directly present the database findings
+        if (dbSession.status === 'analyzed' || dbSession.status === 'resolved') {
+          setHeadline(dbSession.summaryHeadline || 'Diagnosis Report');
+          setConfidence(Number(dbSession.topConfidence) || 0.0);
+          setFindings(dbSession.findings || []);
+          if (dbSession.status === 'resolved') {
+            setResolved(true);
+          }
+          setLoading(false);
+        } else {
+          // 3. If in draft state, invoke rules analysis
+          const analysis = await apiClient.post<AnalysisResult>(`/sessions/${id}/analyze`, {});
+          setHeadline(analysis.summary.headline);
+          setConfidence(analysis.summary.confidence);
+          setFindings(analysis.findings || []);
+          setLoading(false);
+        }
       } catch (err) {
         console.warn('API error or mock fallback triggered, generating simulation...', err);
         generateMockDiagnostics();
@@ -173,8 +187,15 @@ export default function SessionDetailPage({ params }: SessionDetailPageProps) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleResolve = () => {
-    setResolved(true);
+  const handleResolve = async () => {
+    try {
+      if (!isMock) {
+        await apiClient.patch(`/sessions/${id}`, { status: 'resolved' });
+      }
+      setResolved(true);
+    } catch (err) {
+      console.error('Failed to resolve session:', err);
+    }
   };
 
   if (loading) {

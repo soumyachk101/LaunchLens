@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 import { 
   LayoutDashboard, 
   PlusCircle, 
@@ -20,8 +21,10 @@ interface NavigationShellProps {
 }
 
 export default function NavigationShell({ children }: NavigationShellProps) {
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const isLanding = pathname === '/';
+  const isLogin = pathname === '/login';
 
   const menuItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -30,6 +33,14 @@ export default function NavigationShell({ children }: NavigationShellProps) {
     { name: 'Projects', href: '/projects', icon: FolderGit2 },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
+
+  if (isLogin) {
+    return (
+      <div className="flex flex-col min-h-screen bg-black text-zinc-100 selection:bg-emerald-500/30 selection:text-emerald-300">
+        <main className="flex-1 flex flex-col">{children}</main>
+      </div>
+    );
+  }
 
   if (isLanding) {
     return (
@@ -51,12 +62,21 @@ export default function NavigationShell({ children }: NavigationShellProps) {
               <Link href="#docs" className="hover:text-white transition-colors">Docs</Link>
             </nav>
             <div className="flex items-center gap-4">
-              <Link 
-                href="/dashboard" 
-                className="inline-flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 px-4 py-2 text-sm font-medium transition-all active:scale-[0.97] duration-160 ease-out"
-              >
-                Sign In
-              </Link>
+              {user ? (
+                <Link 
+                  href="/dashboard" 
+                  className="inline-flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 px-4 py-2 text-sm font-medium transition-all active:scale-[0.97] duration-160 ease-out"
+                >
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <Link 
+                  href="/dashboard" 
+                  className="inline-flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700 px-4 py-2 text-sm font-medium transition-all active:scale-[0.97] duration-160 ease-out"
+                >
+                  Sign In
+                </Link>
+              )}
               <Link 
                 href="/diagnosis" 
                 className="inline-flex items-center justify-center rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 font-semibold px-4 py-2 text-sm shadow-lg shadow-emerald-500/10 transition-all active:scale-[0.97] duration-160 ease-out"
@@ -121,10 +141,11 @@ export default function NavigationShell({ children }: NavigationShellProps) {
               <User className="w-4 h-4 text-zinc-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-zinc-200 truncate">Developer Account</p>
-              <p className="text-[10px] text-zinc-500 truncate">dev@launchlens.io</p>
+              <p className="text-xs font-semibold text-zinc-200 truncate">{user?.name || 'Developer Account'}</p>
+              <p className="text-[10px] text-zinc-500 truncate">{user?.email || 'dev@launchlens.io'}</p>
             </div>
             <button 
+              onClick={logout}
               className="text-zinc-500 hover:text-zinc-300 p-1.5 rounded-md hover:bg-zinc-900 active:scale-90 transition-all duration-160 ease-out"
               title="Logout"
             >
