@@ -1,0 +1,171 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               String            @id @default(uuid()) @db.Uuid
+  name             String
+  email            String            @unique
+  imageUrl         String?           @map("image_url")
+  authProvider     String            @map("auth_provider")
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+  workspaces       Workspace[]       @relation("WorkspaceOwner")
+  workspaceMembers WorkspaceMember[]
+  projects         Project[]
+  diagnosisSessions DiagnosisSession[]
+  feedback         Feedback[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id        String            @id @default(uuid()) @db.Uuid
+  name      String
+  ownerId   String            @map("owner_id") @db.Uuid
+  owner     User              @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  members   WorkspaceMember[]
+  projects  Project[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid()) @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id") @db.Uuid
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        String    // owner, admin, member
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("workspace_members")
+}
+
+model Project {
+  id            String             @id @default(uuid()) @db.Uuid
+  workspaceId   String             @map("workspace_id") @db.Uuid
+  workspace     Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name          String
+  platform      String             // vercel, railway, netlify, etc.
+  framework     String             // nextjs, react, node, etc.
+  repoUrl       String?            @map("repo_url")
+  productionUrl String?            @map("production_url")
+  createdBy     String             @map("created_by") @db.Uuid
+  creator       User               @relation(fields: [createdBy], references: [id])
+  createdAt     DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime           @updatedAt @map("updated_at") @db.Timestamptz
+  sessions      DiagnosisSession[]
+
+  @@map("projects")
+}
+
+model DiagnosisSession {
+  id             String        @id @default(uuid()) @db.Uuid
+  projectId      String        @map("project_id") @db.Uuid
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy      String        @map("created_by") @db.Uuid
+  creator        User          @relation(fields: [createdBy], references: [id])
+  title          String
+  status         String        // draft, analyzed, resolved, archived
+  environment    String        // preview, production, staging
+  issueType      String        @map("issue_type") // auth, env, db, build, dns, api, other
+  topCategory    String?       @map("top_category")
+  topConfidence  Decimal?      @map("top_confidence") @db.Decimal(5, 2)
+  summaryHeadline String?      @map("summary_headline")
+  rawLogExcerpt  String?       @map("raw_log_excerpt")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  resolvedAt     DateTime?     @map("resolved_at") @db.Timestamptz
+  inputs         SessionInput[]
+  findings       Finding[]
+  feedback       Feedback[]
+
+  @@map("diagnosis_sessions")
+}
+
+model SessionInput {
+  id                 String           @id @default(uuid()) @db.Uuid
+  sessionId          String           @map("session_id") @db.Uuid
+  session            DiagnosisSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  rawLogs            String?          @map("raw_logs")
+  questionnaireJson  Json?            @map("questionnaire_json")
+  parsedMetadataJson Json?            @map("parsed_metadata_json")
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("session_inputs")
+}
+
+model Finding {
+  id              String            @id @default(uuid()) @db.Uuid
+  sessionId       String            @map("session_id") @db.Uuid
+  session         DiagnosisSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  ruleId          String?           @map("rule_id") @db.Uuid
+  rule            Rule?             @relation(fields: [ruleId], references: [id])
+  category        String            // auth_config, env_var, db_conn, etc.
+  title           String
+  description     String
+  severity        String            // low, medium, high, critical
+  confidence      Decimal           @db.Decimal(5, 2)
+  evidenceJson    Json              @map("evidence_json") // Matched text fragments
+  rankOrder       Int               @map("rank_order")
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  recommendations Recommendation[]
+  feedback        Feedback[]
+
+  @@map("findings")
+}
+
+model Recommendation {
+  id         String   @id @default(uuid()) @db.Uuid
+  findingId  String   @map("finding_id") @db.Uuid
+  finding    Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  stepOrder  Int      @map("step_order")
+  content    String
+  stepType   String   @map("step_type") // fix, verify, learn
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("recommendations")
+}
+
+model Rule {
+  id                   String    @id @default(uuid()) @db.Uuid
+  key                  String    @unique
+  title                String
+  category             String
+  severity             String
+  platformsJson        Json      @map("platforms_json")
+  frameworksJson       Json      @map("frameworks_json")
+  patternsJson         Json      @map("patterns_json")
+  negativePatternsJson Json      @map("negative_patterns_json")
+  recommendationsJson  Json      @map("recommendations_json")
+  validationJson       Json      @map("validation_json")
+  isActive             Boolean   @default(true) @map("is_active")
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+  findings             Finding[]
+
+  @@map("rules")
+}
+
+model Feedback {
+  id               String            @id @default(uuid()) @db.Uuid
+  sessionId        String            @map("session_id") @db.Uuid
+  session          DiagnosisSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  findingId        String?           @map("finding_id") @db.Uuid
+  finding          Finding?          @relation(fields: [findingId], references: [id])
+  userId           String            @map("user_id") @db.Uuid
+  user             User              @relation(fields: [userId], references: [id])
+  wasHelpful       Boolean           @map("was_helpful")
+  resolutionStatus String            @map("resolution_status") // fixed, partially_fixed, not_fixed
+  note             String?
+  createdAt        DateTime          @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("feedback")
+}
