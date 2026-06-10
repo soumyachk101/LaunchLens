@@ -1,12 +1,44 @@
-# LaunchLens - DeployFix Assistant
+# 🚀 LaunchLens - DeployFix Assistant
 
-LaunchLens is a developer-focused diagnostic tool that decodes failed deployment logs and environment variables from modern platforms like Vercel, Netlify, and Railway into plain-English root causes and validation checklists.
+Welcome to **LaunchLens**! 👋
+
+Are you a beginner who just got a scary wall of red text when trying to deploy your app on Vercel, Netlify, or Railway? Don't worry! **LaunchLens** is a developer-focused diagnostic tool that decodes those failed deployment logs into plain-English explanations. It tells you exactly what went wrong and gives you an easy, step-by-step checklist to fix it.
 
 ---
 
-## 1. System Architecture (Normal Graph)
+## ✨ Features
 
-This graph displays the split client-server organization, where the Next.js frontend communicates with the Express backend via REST API calls, and the backend persists records using the Prisma client.
+- **Log Decoder:** Paste your confusing build/server logs, and we'll translate them into human-readable issues.
+- **Guided Fixes:** Get a step-by-step interactive checklist to resolve your deployment errors.
+- **Secrets Redaction:** Your sensitive data (like API keys) are automatically hidden for safety.
+- **Dashboard & Stats:** Keep track of your past debugging sessions and see your success rates.
+- **Easy Authentication:** Secure login using simulated OAuth.
+
+---
+
+## 🎥 Interactive Demo
+
+*(Here are some quick previews of LaunchLens in action!)*
+
+### 1. Analyzing Logs
+<p align="center">
+  <img src="https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-analyze.gif" alt="Analyzing Logs Demo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x400.png?text=Analyzing+Logs+Demo+GIF+Coming+Soon';">
+</p>
+> *Watch how LaunchLens instantly parses a Vercel build failure.*
+
+### 2. Step-by-Step Fixes
+<p align="center">
+  <img src="https://raw.githubusercontent.com/soumyachk101/LaunchLens/main/docs/demo-fixes.gif" alt="Fix Checklist Demo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x400.png?text=Interactive+Checklist+Demo+GIF+Coming+Soon';">
+</p>
+> *Follow the simple checklist to solve the root cause.*
+
+*(Note: If the GIFs are not loading, they will be uploaded soon!)*
+
+---
+
+## 🛠️ How It Works (System Architecture)
+
+Here is a simplified view of how the Next.js frontend talks to our Express backend.
 
 ```mermaid
 graph TD
@@ -35,9 +67,9 @@ graph TD
 
 ---
 
-## 2. Troubleshooting Workflow (Workflow Graph)
+## 🔍 Troubleshooting Workflow
 
-This graph displays the steps taken to process a deployment logs diagnostic session, from inputs to final resolution.
+Wondering what happens when you paste your logs? Here is the flow!
 
 ```mermaid
 graph TD
@@ -58,9 +90,9 @@ graph TD
 
 ---
 
-## 3. Sequence Flow Diagram (Sequence/Animated Graph)
+## ⚙️ Sequence Flow Diagram
 
-This diagram details the sequence of network requests, rules validation, and database updates executed during a typical debugging session, including authentication locks.
+For the advanced users, here is the sequence of network requests during a debugging session:
 
 ```mermaid
 sequenceDiagram
@@ -108,54 +140,81 @@ sequenceDiagram
 
 ---
 
-## 4. Getting Started
+## 🚀 Getting Started
+
+Follow these instructions to run the project on your local machine. It's beginner-friendly!
 
 ### Prerequisites
-- Node.js (v18+)
-- PostgreSQL database (or docker container)
-- npm
+Before you start, make sure you have:
+- **Node.js (v18+)**: [Download here](https://nodejs.org/)
+- **PostgreSQL**: Install it locally or run a Docker container.
+- **npm**: Comes with Node.js.
 
-### Database Setup
-1. Inside the `backend/` directory, configure the `DATABASE_URL` connection string in your `.env` file:
+### 1️⃣ Database Setup
+First, we need to set up the database to store our rules and logs.
+
+1. Navigate to the backend folder:
+   ```bash
+   cd backend
+   ```
+2. Create a `.env` file in the `backend/` directory and configure your PostgreSQL connection URL:
    ```env
-   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/deployfix?schema=public"
+   DATABASE_URL="******localhost:5432/deployfix?schema=public"
    PORT=5000
    ```
-2. Run Prisma migrations or schema push to synchronize the database:
+3. Push the schema to your database (creates the tables):
    ```bash
    npx prisma db push
    ```
-3. Run the database seeder to populate the active diagnostic rules:
+4. Populate the database with diagnostic rules (seeding):
    ```bash
    npx prisma db seed
    ```
 
-### Backend Setup
-1. Open a terminal and navigate to the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
+### 2️⃣ Backend Setup
+Now let's start the API server!
+
+1. Still inside the `backend` folder, install the required packages:
    ```bash
    npm install
    ```
-3. Start the development server:
+2. Start the backend development server:
    ```bash
    npm run dev
    ```
-   The backend API runs on [http://localhost:5000/api](http://localhost:5000/api).
+   *The backend will now be running on [http://localhost:5000/api](http://localhost:5000/api).*
 
-### Frontend Setup
-1. Open a new terminal and navigate to the frontend folder:
+### 3️⃣ Frontend Setup
+Finally, let's start the user interface!
+
+1. Open a **new terminal** and navigate to the frontend folder:
    ```bash
    cd frontend
    ```
-2. Install dependencies and start the development server:
+2. Install the required packages:
    ```bash
    npm install
    ```
-3. Run the dev script:
+3. Start the frontend development server:
    ```bash
    npm run dev
    ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser. Unauthenticated routes will redirect to `/login`. Sign in using email credentials or simulate OAuth to start scanning deployment logs!
+4. Open your browser and go to [http://localhost:3000](http://localhost:3000). 
+5. You'll be redirected to `/login`. Sign in using email credentials or simulate OAuth, and start analyzing logs!
+
+---
+
+## 💡 How to Use
+1. **Login:** Once the app is running, sign in.
+2. **Dashboard:** You'll see your dashboard with past sessions. Click "New Diagnosis" (or equivalent) to start.
+3. **Paste Logs:** Copy your failed deployment logs from Vercel/Netlify and paste them into the wizard.
+4. **Get Fixes:** LaunchLens will decode the logs and give you a checklist.
+5. **Resolve:** Follow the checklist, fix your code, and mark the issue as resolved!
+
+---
+
+## 🤝 Contributing
+Contributions are always welcome! Feel free to open an issue or submit a pull request if you want to add new rules or features.
+
+## 📄 License
+This project is open-source and available under the MIT License.
