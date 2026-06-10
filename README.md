@@ -10,16 +10,17 @@ This graph displays the split client-server organization, where the Next.js fron
 
 ```mermaid
 graph TD
-    subgraph Client [Frontend next.js Application]
-        F1[Landing Showcase]
-        F2[Dashboard Panel]
-        F3[Diagnosis Multi-Step Wizard]
-        F4[Interactive Checklists View]
+    subgraph Client [Frontend Next.js Application]
+        F1[Landing Showcase + Interactive Log Simulator]
+        F2[Login System - Credentials & Simulated OAuth]
+        F3[Dashboard Panel - Live API Stats & Skeletons]
+        F4[Diagnosis Multi-Step Wizard]
+        F5[Interactive Checklists View]
     end
     
     subgraph API [Backend Express API]
         S1[Express Router & Controllers]
-        S2[Log Redactor]
+        S2[Log Redactor & Normalizer]
         S3[Rules Evaluator Engine]
         S4[Prisma Access Layer]
     end
@@ -52,47 +53,97 @@ graph TD
     H -->|No| J[Fallback: General Diagnostic Guidance]
     I --> K[Display Interactive Resolution Checklist]
     J --> K
-    K --> L[Mark Resolved & Save Troubleshooting History]
+    K --> L[Mark Resolved & Save Troubleshooting History in Database]
 ```
 
 ---
 
 ## 3. Sequence Flow Diagram (Sequence/Animated Graph)
 
-This diagram details the sequence of network requests, rules validation, and database updates executed during a typical debugging session.
+This diagram details the sequence of network requests, rules validation, and database updates executed during a typical debugging session, including authentication locks.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Developer
     participant Client as Next.js App
+    participant Middleware as Auth Middleware
     participant Server as Express Server
     participant Rules as Rules Engine
     participant Database as PostgreSQL (Prisma)
 
-    User->>Client: Pastes logs & submits context
-    Client->>Server: POST /api/sessions (Create Draft)
-    Server->>Database: Insert Session (Draft)
-    Database-->>Server: OK (Session ID)
+    User->>Client: Open /login & select GitHub/Google
+    Client->>Client: Simulate secure OAuth 2.0 handshake
+    Client->>Client: Save session credentials in cookies
+    Client->>Client: Redirect to /dashboard
+    
+    User->>Client: Access Dashboard / Protected Views
+    Client->>Middleware: Intercept route check (verify cookie)
+    Middleware-->>Client: Authorized (Proceed)
+    
+    Client->>Server: GET /api/sessions/stats
+    Server->>Database: Query aggregated diagnostic statistics
+    Database-->>Server: Result counts
+    Server-->>Client: Dynamic stats payload (runs, breakdown)
+    
+    User->>Client: Pastes logs & submits context in wizard
+    Client->>Server: POST /api/sessions (Create Session)
+    Server->>Database: Insert Session (Draft status)
+    Database-->>Server: Session ID
+    
     Client->>Server: POST /api/sessions/:id/analyze
     Note over Server,Rules: Normalization & Secret Redaction
-    Server->>Rules: Match logs against patterns
+    Server->>Rules: Match logs against database rules
     Rules-->>Server: Ranked Findings List
     Server->>Database: Save Findings & Recommendations
     Database-->>Server: Stored
     Server-->>Client: Return ranked suggestions
-    Client-->>User: Render interactive checklist
+    
     User->>Client: Tick validation steps & click Resolve
-    Client->>Server: POST /api/sessions/:id/resolve
-    Server->>Database: Update status to 'RESOLVED'
+    Client->>Server: PATCH /api/sessions/:id (resolved status)
+    Server->>Database: Update status to 'RESOLVED' and set resolvedAt
     Database-->>Server: Stored
-    Server-->>Client: OK
-    Client-->>User: Show resolved success state
+    Server-->>Client: Return updated session
 ```
 
 ---
 
 ## 4. Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- PostgreSQL database (or docker container)
+- npm
+
+### Database Setup
+1. Inside the `backend/` directory, configure the `DATABASE_URL` connection string in your `.env` file:
+   ```env
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/deployfix?schema=public"
+   PORT=5000
+   ```
+2. Run Prisma migrations or schema push to synchronize the database:
+   ```bash
+   npx prisma db push
+   ```
+3. Run the database seeder to populate the active diagnostic rules:
+   ```bash
+   npx prisma db seed
+   ```
+
+### Backend Setup
+1. Open a terminal and navigate to the backend folder:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   The backend API runs on [http://localhost:5000/api](http://localhost:5000/api).
 
 ### Frontend Setup
 1. Open a new terminal and navigate to the frontend folder:
@@ -102,26 +153,9 @@ sequenceDiagram
 2. Install dependencies and start the development server:
    ```bash
    npm install
-   npm run dev
    ```
-3. Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-### Backend Setup
-1. Open a new terminal and navigate to the backend folder:
-   ```bash
-   cd backend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy environment configurations and generate the database clients:
-   ```bash
-   # Ensure env variables are configured in .env
-   npm run prisma:generate
-   ```
-4. Start the development server:
+3. Run the dev script:
    ```bash
    npm run dev
    ```
-   The backend API will run on [http://localhost:5000/api](http://localhost:5000/api).
+4. Open [http://localhost:3000](http://localhost:3000) in your browser. Unauthenticated routes will redirect to `/login`. Sign in using email credentials or simulate OAuth to start scanning deployment logs!
