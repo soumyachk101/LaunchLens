@@ -119,7 +119,7 @@ sequenceDiagram
 1. Inside the `backend/` directory, configure the `DATABASE_URL` connection string in your `.env` file:
    ```env
    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/deployfix?schema=public"
-   PORT=5000
+   PORT=5001
    ```
 2. Run Prisma migrations or schema push to synchronize the database:
    ```bash
@@ -143,7 +143,7 @@ sequenceDiagram
    ```bash
    npm run dev
    ```
-   The backend API runs on [http://localhost:5000/api](http://localhost:5000/api).
+   The backend API runs on [http://localhost:5001/api](http://localhost:5001/api).
 
 ### Frontend Setup
 1. Open a new terminal and navigate to the frontend folder:
